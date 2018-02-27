@@ -1,0 +1,296 @@
+#:kivy 1.10.0
+
+# Draw dashed lines around every widget
+#<Widget>:
+#    canvas.after:
+#        Line:
+#            rectangle: self.x + 1,self.y + 1,self.width - 1,self.height - 1
+#            dash_offset: 5
+#            dash_length: 3
+
+
+<IconButton@Button>:
+    icon: None
+    canvas:
+        Rectangle:
+            source: self.icon
+            pos: self.center_x - 10, self.center_y - 10
+            size: 20, 20
+
+
+<OptionsDialog>:
+    auto_dismiss: False
+    size: 300, 350
+    size_hint: None, None
+    title: "New game"
+    background_color: [0, 0, 0, 1]
+
+    options: {'size': size_slider.value, 'difficulty': difficulty_spinner.text, 'wrap': wrap_checkbox.active}
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 20
+        spacing: 20
+
+        BoxLayout:
+            orientation: 'horizontal'
+
+            Label:
+                size_hint: None, 1
+                size: self.texture_size
+                text: "Size"
+
+            Slider:
+                id: size_slider
+                value: root.options['size']
+                range: (3, 20)
+                step: 1
+
+            Label:
+                size_hint: None, 1
+                size: self.texture_size
+                text_size: 20, None
+                halign: 'right'
+                text: str(size_slider.value)
+
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: 60
+
+            Label:
+                size_hint: None, 1
+                size: self.texture_size
+                halign: 'left'
+                text: "Difficulty"
+
+            Spinner:
+                id: difficulty_spinner
+                sync_height: True
+                text: root.options['difficulty']
+
+        BoxLayout:
+            orientation: 'horizontal'
+
+            Label:
+                size_hint: None, 1
+                size: self.texture_size
+                text: "Wrapping border"
+
+            CheckBox:
+                id: wrap_checkbox
+                active: root.options['wrap']
+
+        Widget:
+
+        BoxLayout:
+            orientation: 'horizontal'
+
+            Widget:
+
+            Button:
+                size_hint: None, 1
+                text: 'Start!'
+                on_release: root.dismiss()
+
+
+<PauseDialog>:
+    auto_dismiss: True
+    size: 200, 250
+    size_hint: None, None
+    background_color: [0, 0, 0, 1]
+    title: "Game paused"
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 20
+        spacing: 20
+
+        Button:
+            id: newgame_button
+            size: 100, 30
+            size_hint: None, None
+            pos_hint: {'center_x': 0.5}
+            text: "New game"
+            on_release:
+                root.result = 'new game'
+                root.dismiss()
+
+
+        Button:
+            id: reset_button
+            size: 100, 30
+            size_hint: None, None
+            pos_hint: {'center_x': 0.5}
+            text: "Reset"
+            on_release:
+                root.result = 'reset'
+                root.dismiss()
+
+        Button:
+            id: continue_button
+            size: 100, 30
+            size_hint: None, None
+            pos_hint: {'center_x': 0.5}
+            text: "Continue"
+            on_release:
+                root.result = 'continue'
+                root.dismiss()
+
+
+<ResultDialog>:
+    auto_dismiss: False
+    size: 200, 250
+    size_hint: None, None
+    title: "Puzzle solved"
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 20
+        spacing: 20
+
+        BoxLayout:
+            orientation: 'horizontal'
+
+            Label:
+                text: "Time"
+
+            Label:
+                id: time
+                text: "00:00"
+
+        BoxLayout:
+            orientation: 'horizontal'
+
+            Label:
+                text: "Moves"
+
+            Label:
+                id: moves
+                text: "0 / 0"
+
+        BoxLayout:
+            orientation: 'horizontal'
+
+            Label:
+                text: "Score"
+
+            Label:
+                id: score
+                text: "0"
+
+        Widget:
+
+        BoxLayout:
+            orientation: 'horizontal'
+
+            Widget:
+
+            Button:
+                height: 30
+                size_hint: None, None
+                text: "New game"
+                on_release: root.dismiss()
+
+
+<WallWidget>:
+    size_hint: None, None
+
+    canvas.before:
+        PushMatrix
+        Rotate:
+            angle: self.angle
+            origin: self.center
+	canvas.after:
+	    PopMatrix
+
+    Image:
+        pos: self.parent.pos
+        size: self.parent.size
+        source: 'atlas://images/40/assets/wall'
+
+
+<TileWidget>:
+    size_hint: None, None
+
+    canvas.before:
+        PushMatrix
+        Rotate:
+            angle: self.angle
+            origin: self.center
+	canvas.after:
+	    PopMatrix
+        Color:
+            rgba: 0, 0, 0, 0.3 if self.locked else 0
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    Image:
+        pos: self.parent.pos
+        size: self.parent.size
+        source: 'atlas://images/40/assets/' + self.parent.link + ('_powered' if self.parent.powered else '')
+
+
+<SourceWidget>:
+    Image:
+        pos: self.parent.pos
+        size: self.parent.size
+        source: 'atlas://images/40/assets/source' + ('_powered' if self.parent.powered else '')
+
+
+<DrainWidget>:
+    Image:
+        pos: self.parent.pos
+        size: self.parent.size
+        source: 'atlas://images/40/assets/drain' + ('_powered' if self.parent.powered else '')
+
+
+<RootWidget>:
+    anchor_x: 'center'
+    anchor_y: 'center'
+    canvas.before:
+        Color:
+            rgb: 0.18, 0.20, 0.22
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+
+<NetGame>:
+    main_window: main_window
+    grid: grid
+    timer: timer
+
+    BoxLayout:
+        id: main_window
+        orientation: 'vertical'
+        center: self.parent.center
+        padding: 20
+        spacing: 10
+        width: grid.width + 2 * self.padding[0]
+        height: grid.height + status_bar.height + 2 * self.padding[0] + self.spacing
+
+        RelativeLayout:
+            id: grid
+            size_hint: None, None
+
+        BoxLayout:
+            id: status_bar
+            orientation: 'horizontal'
+            spacing: 20
+            size_hint: 1, None
+            height: max(moves_label.height, pause_button.height)
+
+            Label:
+                id: moves_label
+                size: self.texture_size
+                text: str(root.moves) + "/" + str(root.expected_moves)
+
+            Timer:
+                id: timer
+
+            IconButton:
+                id: pause_button
+                size_hint: None, None
+                size: 25, 25
+                icon: 'images/burger.png'
