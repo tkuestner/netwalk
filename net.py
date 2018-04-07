@@ -3,10 +3,12 @@
 
 import cProfile
 import itertools
+import queue
+import threading
 
 from kivy.app import App
 from kivy.animation import Animation
-from kivy.clock import Clock
+from kivy.clock import Clock, mainthread
 from kivy.core.window import Window
 from kivy.properties import BooleanProperty, DictProperty, NumericProperty, ObjectProperty, OptionProperty
 from kivy.uix.anchorlayout import AnchorLayout
@@ -380,6 +382,7 @@ class NetApp(App):
         self.options_dialog = None
         self.profiling = False
         self.profile = None
+        self.result_queue = queue.Queue()
 
     def build(self):
         """Create widgets"""
@@ -432,11 +435,22 @@ class NetApp(App):
         self.config.setall('settings', options)
         if self.game:
             self.root_widget.remove_widget(self.game)
-        puzzle = Builder(Options(options.size, options.size, Difficulty[options.difficulty], options.wrap)).run()
+        options = Options(options.size, options.size, Difficulty[options.difficulty], options.wrap)
+        threading.Thread(target=self.builder_thread, args=(options,)).start()
+        return False  # confirm dismiss
+
+    def builder_thread(self, options):
+        builder = Builder(options)
+        puzzle = builder.run()
+        self.result_queue.put(puzzle)
+        self.builder_finished()
+
+    @mainthread
+    def builder_finished(self):
+        puzzle = self.result_queue.get_nowait()
         self.game = NetGame(puzzle)
         self.game.bind(state=self.on_game_state_changed)
         self.root_widget.add_widget(self.game)
-        return False  # confirm dismiss
 
     def on_pause_dialog_dismiss(self, dialog):
         """Called on closing the pause dialog"""
