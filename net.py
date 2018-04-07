@@ -241,6 +241,7 @@ class NetGame(Widget):
                 if not self.puzzle.wrap and not self.board.valid_index(proto_child):
                     continue
                 child = Vector2d(proto_child.x % self.columns, proto_child.y % self.rows)
+                # noinspection PyTypeChecker
                 if (not power[child] and self._connected(parent, child, direction)
                         and not self._blocking_wall(parent, proto_child)):
                     work.add(child)
@@ -305,7 +306,7 @@ class Timer(Label):
         if not self.running:
             return
         self._time += dt
-        self._settext()
+        self._set_text()
 
     def start(self):
         """Start the timer (no reset)"""
@@ -318,14 +319,14 @@ class Timer(Label):
     def reset(self):
         """Reset the timer to 0"""
         self._time = 0
-        self._settext()
+        self._set_text()
 
     @property
     def seconds(self):
         """Seconds on the timer"""
         return self._time
 
-    def _settext(self):
+    def _set_text(self):
         minutes = int(self._time // 60)
         seconds = int(self._time % 60)
         self.text = "{0:0=2d}:{1:0=2d}".format(minutes, seconds)
@@ -409,7 +410,7 @@ class NetApp(App):
         self.config.write()
         if self.profiling:
             self.profile.disable()
-            self.profile.dump_stats('pynet.profile')
+            self.profile.dump_stats('netwalk.profile')
 
     def on_game_state_changed(self, game, state):
         """Called :class:`NetGame` changes its state"""
