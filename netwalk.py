@@ -9,7 +9,7 @@ import threading
 from kivy.app import App
 from kivy.animation import Animation
 from kivy.clock import Clock, mainthread
-from kivy.core.window import Window
+from kivy.core.window import Keyboard, Window
 from kivy.properties import BooleanProperty, DictProperty, NumericProperty, ObjectProperty, OptionProperty
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.behaviors import ButtonBehavior
@@ -157,6 +157,7 @@ class NetGame(Widget):
         self.ids['pause_button'].bind(on_press=self.on_pause)
         # Set window size to at least size of game dialog
         Window.size = (max(self.main_window.width, 300), max(self.main_window.height, 350))
+        Window.bind(on_key_down=self.on_key_down)
         self._setup_board()
         self._setup_walls()
         self.check_power()
@@ -216,6 +217,12 @@ class NetGame(Widget):
         self.timer.reset()
         self._last_changed = None
         self.state = 'waiting'
+
+    def on_key_down(self, window, key, scancode, codepoint, modifiers):
+        del window, scancode, codepoint, modifiers  # unused parameters
+        if self.state in ('waiting', 'running') and key == Keyboard.keycodes['escape']:
+            self.on_pause(self)
+            return True
 
     def on_tile_change(self, tile):
         """Slot called when a tile is rotated"""
