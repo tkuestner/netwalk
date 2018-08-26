@@ -260,7 +260,7 @@ class Builder:
         tiles[self._source].entity = EntityType.source
         return tiles
 
-    def _create_walls(self, percent=0.06, rsd=0.4):
+    def _create_walls(self, percent=0.06, rsd=0.2):
         """Randomly place some walls
 
         The actual number of walls is drawn from a normal distribution.
