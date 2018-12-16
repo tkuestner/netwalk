@@ -9,7 +9,7 @@ Pynet is a Python+Kivy version of the "net" or "netwalk" game.
 
    builder
    grid
-   net
+   netwalk
    utilities
    vector2d
 

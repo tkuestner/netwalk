@@ -5,9 +5,12 @@ name = "pypi"
 
 [packages]
 cython = "*"
-kivy = {editable = true, git = "https://github.com/kivy/kivy.git"}
+kivy = {editable = true,git = "https://github.com/kivy/kivy.git"}
 
 [dev-packages]
+sphinx = "*"
+sphinx-autodoc-typehints = "*"
+sphinx-rtd-theme = "*"
 
 [requires]
 python_version = "3.7"

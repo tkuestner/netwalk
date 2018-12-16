@@ -1,6 +1,6 @@
 net module
 ==========
 
-.. automodule:: net
+.. automodule:: netwalk
     :members:
 
