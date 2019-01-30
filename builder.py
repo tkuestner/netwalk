@@ -3,7 +3,7 @@ import enum
 import itertools
 import random
 
-from grid import Grid
+from grid import Grid, GridContainer
 from utilities import clamp, weighted_choice
 from vector2d import Direction, Vector2d
 
@@ -199,7 +199,7 @@ class Builder:
     @classmethod
     def example(cls):
         """A simple example puzzle"""
-        grid = Grid(columns=5, rows=5)
+        grid = GridContainer(Grid(3, 3))
         grid[0, 2] = Tile(LinkType.dead_end, Direction.down)
         grid[1, 2] = Tile(LinkType.t_intersection, Direction.right)
         grid[2, 2] = Tile(LinkType.corner, Direction.left)
@@ -220,16 +220,16 @@ class Builder:
         The algorithm starts with a source in the center and chooses an already visited tile at random to extend the
         tree to a random unvisited tile.
         """
-        self._nodes = Grid(self.columns, self.rows)
+        self._nodes = GridContainer(Grid(self.columns, self.rows))
         nodes = self._nodes  # alias
         for x, y in itertools.product(range(self.columns), range(self.rows)):
             nodes[x, y] = Builder.Node()
-        visited = Grid(self.columns, self.rows, False)
+        visited = GridContainer(Grid(self.columns, self.rows), False)
         visited[self._source] = True
         boundary = {self._source}
         while True:
             new_boundary = set()
-            moves = []  # [(parent, child, direction), ...]
+            moves = []  # [(parent, child, direction), ...]  FIXME namedtuple
             for parent in boundary:
                 for direction in Direction:
                     child = parent + direction.vector
@@ -254,7 +254,7 @@ class Builder:
             boundary = new_boundary
 
         # Transform nodes/edges into tiles with link type and orientation
-        tiles = Grid(self.columns, self.rows)
+        tiles = GridContainer(Grid(self.columns, self.rows))
         for x, y in itertools.product(range(self.columns), range(self.rows)):
             tiles[x, y] = nodes[x, y].to_tile()
         tiles[self._source].entity = EntityType.source
@@ -284,7 +284,7 @@ class Builder:
 
         The actual number of rotated tile is drawn from a normal distribution.
 
-        :param grid.Grid grid: Grid of :class:`Tile` objects
+        :param grid.GridContainer grid: Grid of :class:`Tile` objects
         :param float percent: Mean percent of tiles to be rotated
         :param float rsd: Relative standard deviation
         """

@@ -18,7 +18,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 
 from builder import Builder, Difficulty, EntityType, LinkType, Options, Wall
-from grid import Grid
+from grid import Grid, GridContainer
 from vector2d import Direction, Vector2d
 
 
@@ -163,7 +163,7 @@ class NetGame(Widget):
         self.check_power()
 
     def _setup_board(self):
-        self.board = Grid(self.columns, self.rows)  # for storing widgets
+        self.board = GridContainer(Grid(self.columns, self.rows))  # for storing widgets
         self.grid.clear_widgets()  # RelativeLayout
         for x, y in itertools.product(range(self.columns), range(self.rows)):
             if self.puzzle.grid[x, y].entity == EntityType.source:
@@ -240,14 +240,14 @@ class NetGame(Widget):
 
     def check_power(self):
         """Check which tile is connected to the power source"""
-        power = Grid(self.columns, self.rows, False)
+        power = GridContainer(Grid(self.columns, self.rows), False)
         work = {self.puzzle.source}
         while work:
             parent = work.pop()
             power[parent] = True
             for direction in Direction:
                 proto_child = parent + direction.vector
-                if not self.puzzle.wrap and not self.board.valid_index(proto_child):
+                if not self.puzzle.wrap and not self.board.grid.valid(proto_child):
                     continue
                 child = Vector2d(proto_child.x % self.columns, proto_child.y % self.rows)
                 # noinspection PyTypeChecker
@@ -272,7 +272,7 @@ class NetGame(Widget):
 
     def _check_solved(self):
         """Check if all tiles are connected to the power source"""
-        return all(tile.powered for tile in self.board)
+        return all(tile.powered for tile in self.board.items())
 
     def score(self) -> int:
         """Calculate the score"""

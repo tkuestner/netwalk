@@ -1,45 +1,62 @@
+from vector2d import Direction, Vector2d
+
+import itertools
+
+
 class Grid:
-    """ Container data type, two-dimensional grid (or matrix)
+    # Replacement for grid, coordinate system only
 
-    Grid is subscriptable (with 2-dimensional indices, e.g., :class:`vector2d.Vector2d`) and iterable
-
-    :ivar int columns: Number of columns, first coordinate in range [0, columns)
-    :ivar int rows: Number of rows, second coordinate in range [0, rows)
-    :param initial_value: Value (or object) used to initialize the grid's elements. No shallow or deep copy
-     is performed.
-
-    >>> g = Grid(2, 3, 4)
-    >>> print(g[1, 1])
-    4
-    >>> g[0, 0] = 5
-    >>> print(g[g.normalize((2, 3))])
-    5
-    >>> g = Grid(2, 2, set())
-    >>> g[0, 0].add(8)
-    >>> print(g[1, 1])
-    {8}
-    """
-
-    def __init__(self, columns, rows, initial_value=None):
+    def __init__(self, columns, rows, periodic=True):
         if not isinstance(columns, int) or columns < 0:
             raise ValueError("columns must be non-negative integer")
         if not isinstance(rows, int) or rows < 0:
             raise ValueError("columns must be non-negative integer")
         self.columns = columns
         self.rows = rows
-        self._length = columns * rows
-        self._data = [initial_value for _ in range(columns * rows)]
+        self.periodic = periodic
 
-    def valid_index(self, index):
-        """True if index is inside :math:`[0, columns) \\times [0, rows)`, false otherwise
+    def valid(self, coordinates):  # maybe call param 'node'
+        if self.periodic:
+            return True
+        return 0 <= coordinates[0] < self.columns and 0 <= coordinates[1] < self.rows
 
-        :param index: 2-dimensional index. Subscriptable object, e.g. :class:`tuple` or :class:`vector2d.Vector2d`
-        """
-        return 0 <= index[0] < self.columns and 0 <= index[1] < self.rows
+    def normalize(self, coordinates):
+        return Vector2d(coordinates[0] % self.columns, coordinates[1] % self.rows)
 
+    def neighbors(self, coordinates):
+        for direction in Direction:
+            neighbor = Vector2d(*coordinates) + direction.vector
+            if self.periodic:
+                # neighbor = Vector2d(neighbor[0] % self.columns, neighbor[1] % self.rows)
+                yield self.normalize(neighbor)
+            elif self.valid(neighbor):
+                yield neighbor
+
+    def __iter__(self):
+        for x, y in itertools.product(range(self.columns), range(self.rows)):
+            yield Vector2d(x, y)
+
+
+class GridContainer:
+    # Grid with objects at nodes
+
+    def __init__(self, grid, initial_value=None):
+        self.grid = grid
+        self.columns = self.grid.columns
+        self.rows = self.grid.rows
+        self.periodic = self.grid.periodic
+        # self._length = columns * rows
+        self._data = [initial_value for _ in range(self.columns * self.rows)]
+
+    # NOTE Corresponds to itertools.product(range(columns), range(rows))
     def _index(self, coordinates):
-        # NOTE Corresponds to itertools.product(range(columns), range(rows))
-        return coordinates[0] * self.rows + coordinates[1]
+        if self.grid.valid(coordinates):
+            return coordinates[0] * self.rows + coordinates[1]
+        elif self.periodic:
+            coordinates = self.grid.normalize(coordinates)
+            return coordinates[0] * self.rows + coordinates[1]
+        else:
+            raise IndexError("Cannot access {} in grid".format(coordinates))
 
     def __getitem__(self, coordinates):
         return self._data[self._index(coordinates)]
@@ -47,13 +64,12 @@ class Grid:
     def __setitem__(self, coordinates, value):
         self._data[self._index(coordinates)] = value
 
-    def __len__(self):
-        return self._length
-
+    # Iterator for pairs of (coordinates, object)
     def __iter__(self):
-        return self._data.__iter__()
+        for node in self.grid:
+            yield (node, self[node])
 
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+    # Iterator for objects (without coordinates)
+    def items(self):
+        for node in self.grid:
+            yield self[node]
