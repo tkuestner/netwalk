@@ -11,6 +11,3 @@ kivy = {editable = true,git = "https://github.com/kivy/kivy.git"}
 sphinx = "*"
 sphinx-autodoc-typehints = "*"
 sphinx-rtd-theme = "*"
-
-[requires]
-python_version = "3.7"
