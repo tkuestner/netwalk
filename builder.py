@@ -276,7 +276,7 @@ class Builder:
                 walls.add(Wall(Vector2d(x, y), Wall.Orientation.vertical))
         mean = len(walls) * percent
         count = clamp(int(random.gauss(mean, rsd * mean)), 0, len(walls))
-        walls = random.sample(walls, count)
+        walls = random.sample(list(walls), count)
         return walls
 
     def _rotate(self, grid, percent=0.8, rsd=0.1):
@@ -294,7 +294,7 @@ class Builder:
                 rotatable.add(grid[x, y])
         mean = len(rotatable) * percent
         count = clamp(int(random.gauss(mean, rsd * mean)), 1, len(rotatable))
-        for tile in random.sample(rotatable, count):
+        for tile in random.sample(list(rotatable), count):
             if tile.link == LinkType.straight:
                 tile.orientation = tile.orientation.rotate()
             else:
